@@ -1,0 +1,214 @@
+# Maya AETemplate Guide
+# Simple custom Attribute Editor template example
+
+"""
+AETemplates are used to customize the Attribute Editor interface in Maya.
+They must be named: AE<NodeType>Template.py
+Example: For a node type "myCustomNode", name it: AEmyCustomNodeTemplate.py
+
+Place this file in:
+- Your Maya scripts folder
+- Or any folder in MAYA_SCRIPT_PATH
+"""
+
+import maya.cmds as cmds
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+
+
+class AEmyCustomNodeTemplate(object):
+    """
+    Basic AETemplate structure for a custom node.
+    Replace 'myCustomNode' with your actual node type name.
+    """
+    
+    def __init__(self, nodeName):
+        """
+        Initialize the template.
+        Args:
+            nodeName: The name of the node being displayed
+        """
+        self.nodeName = nodeName
+        self.buildUI()
+    
+    def buildUI(self):
+        """
+        Build the Attribute Editor UI layout.
+        This is called automatically when the AE displays the node.
+        """
+        # Start the main layout
+        cmds.editorTemplate(beginScrollLayout=True)
+        
+        # === SECTION 1: Basic Attributes ===
+        cmds.editorTemplate(beginLayout="Basic Settings", collapse=False)
+        
+        # Add individual attributes
+        cmds.editorTemplate(addControl="attributeName1")
+        cmds.editorTemplate(addControl="attributeName2")
+        
+        # Add attribute with custom label
+        cmds.editorTemplate(label="Custom Label", addControl="attributeName3")
+        
+        cmds.editorTemplate(endLayout=True)
+        
+        # === SECTION 2: Advanced Attributes ===
+        cmds.editorTemplate(beginLayout="Advanced Settings", collapse=True)
+        
+        cmds.editorTemplate(addControl="advancedAttr1")
+        cmds.editorTemplate(addControl="advancedAttr2")
+        
+        cmds.editorTemplate(endLayout=True)
+        
+        # === SECTION 3: Custom Controls ===
+        cmds.editorTemplate(beginLayout="Custom Controls", collapse=True)
+        
+        # Add a custom control using a callback function
+        cmds.editorTemplate(
+            callCustom=self.customControlNew,
+            self.customControlReplace,
+            "customAttribute"
+        )
+        
+        # Add a separator
+        cmds.editorTemplate(addSeparator=True)
+        
+        # Add dynamic attributes section
+        cmds.editorTemplate(addControl="anotherAttr")
+        
+        cmds.editorTemplate(endLayout=True)
+        
+        # === SUPPRESS UNWANTED ATTRIBUTES ===
+        # Hide specific attributes from the UI
+        cmds.editorTemplate(suppress="hiddenAttr1")
+        cmds.editorTemplate(suppress="hiddenAttr2")
+        
+        # === ADD EXTRA ATTRIBUTES ===
+        # This adds any attributes not explicitly defined above
+        cmds.editorTemplate(addExtraControls=True)
+        
+        # End the scroll layout
+        cmds.editorTemplate(endScrollLayout=True)
+    
+    def customControlNew(self, attr):
+        """
+        Create a custom control (called when UI is first built).
+        Args:
+            attr: The attribute name
+        """
+        # Create a custom UI element
+        cmds.rowLayout(numberOfColumns=2, columnWidth2=(150, 200))
+        cmds.text(label="Custom Control:")
+        cmds.button(
+            label="Click Me",
+            command=lambda *args: self.customButtonCallback(attr)
+        )
+        cmds.setParent('..')
+    
+    def customControlReplace(self, attr):
+        """
+        Update the custom control (called when switching between nodes).
+        Args:
+            attr: The attribute name
+        """
+        # Update the control's connection to the new node
+        pass
+    
+    def customButtonCallback(self, attr):
+        """
+        Callback for custom button.
+        Args:
+            attr: The attribute name
+        """
+        print(f"Button clicked for attribute: {attr}")
+        print(f"Current node: {self.nodeName}")
+
+
+# ============================================================
+# PRACTICAL EXAMPLE: Transform Node Template
+# ============================================================
+
+class AEtransformTemplate(object):
+    """
+    Example: Simplified template for Maya's transform node.
+    This demonstrates a real-world usage.
+    """
+    
+    def __init__(self, nodeName):
+        self.nodeName = nodeName
+        self.buildUI()
+    
+    def buildUI(self):
+        cmds.editorTemplate(beginScrollLayout=True)
+        
+        # Transform Attributes
+        cmds.editorTemplate(beginLayout="Transform Attributes", collapse=False)
+        cmds.editorTemplate(addControl="translate")
+        cmds.editorTemplate(addControl="rotate")
+        cmds.editorTemplate(addControl="scale")
+        cmds.editorTemplate(endLayout=True)
+        
+        # Visibility
+        cmds.editorTemplate(beginLayout="Visibility", collapse=True)
+        cmds.editorTemplate(addControl="visibility")
+        cmds.editorTemplate(addControl="lodVisibility")
+        cmds.editorTemplate(endLayout=True)
+        
+        # Add remaining attributes
+        cmds.editorTemplate(addExtraControls=True)
+        
+        cmds.editorTemplate(endScrollLayout=True)
+
+
+# ============================================================
+# KEY METHODS REFERENCE
+# ============================================================
+
+"""
+Common AETemplate Methods:
+
+1. Layout Control:
+   - editorTemplate(beginScrollLayout=True)
+   - editorTemplate(endScrollLayout=True)
+   - editorTemplate(beginLayout="Name", collapse=True/False)
+   - editorTemplate(endLayout=True)
+
+2. Adding Controls:
+   - editorTemplate(addControl="attrName")
+   - editorTemplate(label="Label", addControl="attrName")
+   - editorTemplate(addSeparator=True)
+   
+3. Custom Controls:
+   - editorTemplate(callCustom=newFunc, replaceFunc, "attrName")
+   
+4. Suppressing Attributes:
+   - editorTemplate(suppress="attrName")
+   
+5. Extra Attributes:
+   - editorTemplate(addExtraControls=True)
+   
+6. Dynamic Attributes:
+   - editorTemplate(addDynamicControl=True)
+"""
+
+
+# ============================================================
+# USAGE INSTRUCTIONS
+# ============================================================
+
+"""
+To use this template:
+
+1. Save as: AE<YourNodeType>Template.py
+   Example: AEmyCustomNodeTemplate.py
+
+2. Place in Maya scripts folder:
+   - Windows: Documents/maya/scripts/
+   - Mac/Linux: ~/maya/scripts/
+
+3. Restart Maya or reload:
+   import maya.cmds as cmds
+   cmds.refreshEditorTemplates()
+
+4. Select a node of your type and open the Attribute Editor
+
+5. The custom template will automatically be used
+"""
